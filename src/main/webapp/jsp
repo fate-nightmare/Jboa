@@ -1,0 +1,170 @@
+<td>
+										<a href="JavaScript:void(0)" data-c="${"${obj.leaveId}"}" name='id'>
+											<img src="images/search.gif" width="16" height="15">
+										</a>
+										<a href="JavaScript:void(0)" data-c="${"${obj.leaveId}"}" name='examine'>
+											<img src="images/sub.gif" width="16" height="15">
+										</a>
+									</td>
+
+
+<c:forEach items="${PAGE.list }" var="temp">
+							<td>
+								<a href="/jboa/leave/getDetail?leaveId=${temp.leaveId }">
+									<img src="images/search.gif" width="16" height="15">
+								</a>
+								<c:if test="${temp.nextDealMan == EMP.employeeId }">
+									<%-- <c:if test="${temp.resultId == 1 }"> --%>
+										<a target="rightFrame" href="/jboa/leave/toCheckPage?leaveId=${temp.leaveId }">
+											<img src="images/sub.gif" width="16" height="16">
+										</a>
+									<%-- </c:if> --%>
+								</c:if>
+							</td>
+					</c:forEach>
+
+
+/* var time=new Date();
+	var year=time.getFullYear();
+	var month=time.getMonth();
+	var date=time.getDate();
+	var day=time.getDay();
+	var hour=time.getHours();
+	var minu=time.getMinutes();
+	alert("现在是"+year+"/"+month+"/"+date+hour+":"+minu+"星期"+day); */
+
+
+<a href="JavaScript:void(0)" data-c="${"${obj.leaveId}"}" name='id'>
+										<c:if test="${'<%=${obj.statusName}%>'==2}">
+											<td><img src="images/search.gif" width="16" height="15"></td>
+										</c:if>
+										<c:if test="${'<%=${obj.statusName}%>'!=2}">
+										<td><img src="images/search.gif" width="16" height="15"><img src="images/search.gif" width="16" height="15"></td>
+									</c:if>
+										</a>
+
+
+$.getJSON(`/Jboa/api/leaveList/${employeeId}`,function(res){
+		$.each(res.list,function(i.obj){
+			var $tr = $(`<tr>
+					<td><a href="javascript:void(0)">${"${obj.leaveId}"}</a></td>
+					<td>${"${obj.createManName}"}请假1天</td>
+					<td>${"${obj.createTime}"}</td>
+					<td>${"${obj.endTime}"}</td>
+					<td>${"${obj.resultId}"}</td>
+					<td>无</td>
+					<td>${"${obj.statusName}"}</td>
+					<td>
+						<a href="getDetail.jsp?leaveId=139">
+							<img src="images/search.gif" width="16" height="15">
+						</a>
+						
+					</td>
+				</tr>`);
+			$("tbody").append($tr);
+			})
+		
+		});
+
+
+//根据用户查询请假列表
+	$.ajax("/Jboa/api/leaveList/"+employeeId,{
+		type : "get",
+		dataType : "json",
+		contentType : "application/json",
+		success:function(res){
+			console.info(res.list);
+			$.each(res.list,function(i.obj){
+				var $tr = $(`<tr>
+						<td><a href="javascript:void(0)">${"${obj.leaveId}"}</a></td>
+						<td>${"${obj.createManName}"}请假1天</td>
+						<td>${"${obj.createTime}"}</td>
+						<td>${"${obj.endTime}"}</td>
+						<td>${"${obj.resultId}"}</td>
+						<td>无</td>
+						<td>${"${obj.statusName}"}</td>
+						<td>
+							<a href="getDetail.jsp?leaveId=139">
+								<img src="images/search.gif" width="16" height="15">
+							</a>
+							
+						</td>
+					</tr>`);
+				$("tbody").append($tr);
+				})
+		}
+	});
+
+
+//根据用户查询请假列表
+	$.ajax("/Jboa/c/leaveList/"+employeeId,{
+		type: "get",
+		dataType: "json",
+		contentType: "application/json",
+		success:function(res){
+			$.each(res.list,function(i.obj){
+				console.info(res.list);
+				var tr = $(`<tr>
+						<td><a href="javascript:void(0)">${"${obj.leaveId}"}</a></td>
+						<td>${"${obj.createManName}"}请假1天</td>
+						<td>${"${obj.createTime}"}</td>
+						<td>${"${obj.endTime}"}</td>
+						<td>${"${obj.resultId}"}</td>
+						<td>无</td>
+						<td>${"${obj.statusName}"}</td>
+						<td>
+							<a href="getDetail.jsp?leaveId=139">
+								<img src="images/search.gif" width="16" height="15">
+							</a>
+							
+						</td>
+					</tr>`);
+				$("tbody").append(tr);
+				})
+		}
+	});
+
+
+function yanzhen(){
+        alert("进入");
+		var userNumber = $("[name=jobNumber]").val();
+		console.info(userNumber);
+		var userPwd = $("[name=password]").val();
+		var verification = $("[name=verification]").val();
+		
+		if(userNumber == ""){
+			$(".sp2").text("");
+			$(".sp3").text("");
+			$(".sp1").css({"font-size":"10px","color":"red"});
+			$(".sp1").text("工号不能为空！");
+			return false;
+		}else if(userPwd == ""){
+			$(".sp1").text("");
+			$(".sp3").text("");
+			$(".sp2").css({"font-size":"10px","color":"red"});
+			$(".sp2").text("密码不能为空！");
+			return false;
+		}else if(verification == ""){
+			$(".sp1").text("");
+			$(".sp2").text("");
+			$(".sp3").css({"font-size":"10px","color":"red"});
+			$(".sp3").text("验证码不能为空！");
+			return false;
+		}else if(verification.toLowerCase()!=yanzm.toLowerCase()){
+			$(".sp1").text("");
+			$(".sp2").text("");
+			$(".sp3").css({"font-size":"10px","color":"red"});
+			$(".sp3").text("验证码错误！");
+			$('#verifyCanvas').remove();
+	        $('#verify').after('<canvas width="100" height="40" id="verifyCanvas"></canvas>')
+	        drawCode();
+			return false;
+		} 
+		/* location.href("/Jboa/c/list/login"); */
+		return true;
+	};
+    
+	/* $(function(){
+		
+		
+	}); */

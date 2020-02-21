@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.accp.dao.LeaveListDAO" >
+	<!-- 人事查看请假 -->
+	<select id="queryByPersonnel" resultType="LeaveList">
+		SELECT leaveId,createMan,employeeName createManName,l.departmentId,departmentName,emp.positionId,positionName,
+		(SELECT checkComment FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) checkComment,
+		(SELECT checkResult FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) resultId,
+		(SELECT checkTime FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) checkTime,createTime,startTime,endTime,nextDealMan,
+		(SELECT employeeName FROM employee emp WHERE emp.employeeId = nextDealMan) nextDealManName,EVENT,totalCount,l.statusId,statusName 
+		FROM tb_leave l
+		INNER JOIN employee emp 
+		ON l.createMan = emp.employeeId
+		INNER JOIN department d 
+		ON l.departmentId = d.departmentId
+		INNER JOIN POSITION p 
+		ON p.positionId = emp.positionId
+		INNER JOIN tb_status s 
+		ON l.statusId = s.statusId 
+		WHERE  l.departmentId != #{departmentId} OR emp.positionId = #{positionId} OR createMan = #{employeeId}
+		ORDER BY createTime DESC
+	</select>
+
+	<!-- 点击审批通过新增审批/修改请假表 -->
+	<insert id="insertByApproval">
+		insert into tb_check
+		value(#{tb_check.checkId},#{tb_check.bizId},#{tb_check.typeId},#{tb_check.checkTime},#{tb_check.checkMan},#{tb_check.checkResult},#{tb_check.checkComment})
+	</insert>
+	
+	<update id="updateByLeaveList">
+		update tb_leave set statusId = #{leaveList.statusId},nextDealMan = #{leaveList.nextDealMan}
+		where leaveId = #{leaveList.leaveId}
+	</update>
+
+	<!-- 部门经理查看请假 -->
+	<select id="queryByDepartmentManager" resultType="LeaveList" >
+		SELECT leaveId,createMan,employeeName createManName,l.departmentId,departmentName,emp.positionId,positionName,
+			(SELECT checkComment FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) checkComment,
+			(SELECT checkResult FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) resultId,
+			(SELECT checkTime FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) checkTime,createTime,startTime,endTime,nextDealMan,
+			(SELECT employeeName FROM employee emp WHERE emp.employeeId = nextDealMan) nextDealManName,EVENT,totalCount,l.statusId,statusName 
+			FROM tb_leave l
+			INNER JOIN employee emp 
+			ON l.createMan = emp.employeeId
+			INNER JOIN department d 
+			ON l.departmentId = d.departmentId
+			INNER JOIN POSITION p 
+			ON p.positionId = emp.positionId
+			INNER JOIN tb_status s 
+			ON l.statusId = s.statusId 
+			WHERE l.departmentId = #{departmentId}  OR emp.positionId = #{positionId} OR createMan = #{employeeId}
+			ORDER BY createTime DESC
+  </select>
+
+	<!-- 请假 -->
+	<insert id="insertByLeave">
+		insert into tb_leave 
+		value(#{tb_leave.leaveId},#{tb_leave.typeId},#{tb_leave.createMan},#{tb_leave.departmentId},#{tb_leave.createTime},#{tb_leave.startTime},#{tb_leave.endTime},#{tb_leave.nextDealMan},#{tb_leave.event},#{tb_leave.totalCount},#{tb_leave.statusId});
+	</insert>
+	
+	<!-- 按时间区域查询 -->
+	<select id="queryByTime" resultType="LeaveList">
+		SELECT leaveId,createMan,employeeName createManName,l.departmentId,departmentName,emp.positionId,positionName,
+			(SELECT checkComment FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) checkComment,
+			(SELECT checkResult FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) resultId,
+			(SELECT checkTime FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) checkTime,createTime,startTime,endTime,nextDealMan,
+			(SELECT employeeName FROM employee emp WHERE emp.employeeId = nextDealMan) nextDealManName,EVENT,totalCount,l.statusId,statusName 
+			FROM tb_leave l
+			INNER JOIN employee emp 
+			ON l.createMan = emp.employeeId
+			INNER JOIN department d 
+			ON l.departmentId = d.departmentId
+			INNER JOIN POSITION p 
+			ON p.positionId = emp.positionId
+			INNER JOIN tb_status s 
+			ON l.statusId = s.statusId 
+			WHERE startTime BETWEEN #{startTime}
+			AND #{endTime}
+			OR endTime BETWEEN #{startTime}
+			AND #{endTime}
+	</select>
+	
+	<!-- 查看请假审批详情 -->
+	<select id="queryByLeaveListDetails" resultType="Leavedetails">
+		SELECT *,
+			(SELECT employeeName FROM employee emp WHERE emp.employeeId = checkMan) nextDealManName
+			FROM `tb_check` AS tc
+			INNER JOIN `tb_leave` AS tl
+			ON tc.`bizId` = tl.`leaveId` AND tc.`typeId` = tl.`typeId`
+			INNER JOIN `check_result` AS cr
+			ON tc.`checkResult` = cr.`resultId`
+			WHERE tl.`leaveId` = #{leaveId}
+	</select>
+
+	<!-- 看请假详细基本信息 -->
+	<select id="queryByLeaveListDetail" resultType="LeaveList">
+		SELECT * FROM `employee` AS e
+			INNER JOIN `tb_leave` AS te
+			ON e.`employeeId` = te.`createMan`
+			INNER JOIN `department` AS d
+			ON te.`departmentId` = d.`departmentId`
+			INNER JOIN `tb_status` AS ts
+			ON te.`statusId` = ts.`statusId`
+			WHERE te.`leaveId` = #{leaveId}
+	</select>
+	
+	<!-- 根据处理人编号查询处理人姓名 -->
+	<select id="queryByEmployeeId" resultType="Employee">
+		select * from employee where employeeId = #{employeeId}
+	</select>
+  
+  <!-- 根据角色查询请假列表 -->
+  <select id="queryByLeaveList" resultType="LeaveList" >
+   SELECT leaveId,createMan,employeeName createManName,l.departmentId,departmentName,emp.positionId,positionName,
+	(SELECT checkComment FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) checkComment,
+	(SELECT checkResult FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) resultId,
+	(SELECT checkTime FROM tb_check WHERE typeId = 1 AND bizId = l.leaveId ORDER BY checkTime DESC LIMIT 0,1) checkTime,createTime,startTime,endTime,nextDealMan,
+	(SELECT employeeName FROM employee emp WHERE emp.employeeId = nextDealMan) nextDealManName,EVENT,totalCount,l.statusId,statusName 
+	FROM tb_leave l
+	INNER JOIN employee emp 
+	ON l.createMan = emp.employeeId
+	INNER JOIN department d 
+	ON l.departmentId = d.departmentId
+	INNER JOIN POSITION p 
+	ON p.positionId = emp.positionId
+	INNER JOIN tb_status s 
+	ON l.statusId = s.statusId 
+	WHERE  emp.positionId = #{positionId} AND createMan = #{employeeId}
+	ORDER BY createTime DESC
+  </select>
+  
+</mapper>

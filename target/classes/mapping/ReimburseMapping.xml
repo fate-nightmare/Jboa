@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.accp.dao.IReimburseDAO" >
+
+	<!-- 查看审批详情 -->
+	<select id="queryByCheck" resultType="ReimbursementList">
+		SELECT *,
+			(SELECT employeeName FROM employee emp WHERE emp.employeeId = checkMan) nextDealMans
+			FROM `tb_check` AS tc
+			INNER JOIN `tb_reimburse` AS tre
+			ON tc.`bizId` = tre.`reimburseId` AND tc.`typeId` = tre.`typeId`
+			INNER JOIN `check_result` AS cr
+			ON tc.`checkResult` = cr.`resultId`
+			WHERE tre.`reimburseId` = #{reimburseId}
+	</select>
+
+<!-- 点击审批通过新增审批/修改报销/打回/存档 -->
+	<insert id="insertByApproval">
+		insert into tb_check
+		value(#{tb_check.checkId},#{tb_check.bizId},#{tb_check.typeId},#{tb_check.checkTime},#{tb_check.checkMan},#{tb_check.checkResult},#{tb_check.checkComment})
+	</insert>
+	
+	<update id="updateByReimburse">
+		update tb_reimburse set statusId = #{tbr.statusId},nextDealMan = #{tbr.nextDealMan}
+		where reimburseId = #{tbr.reimburseId}
+	</update>
+	
+	<!-- 编辑新增新的项目详情 -->
+	<insert id="insertByNewProject">
+		insert into reimburse_detail
+		value(#{rdl.id},#{rdl.mainId},#{rdl.subTotal},#{rdl.desc},#{rdl.pictureName},#{rdl.picturePath})
+	</insert>
+
+	<!-- 提交编辑 -->
+	<update id="updateBySave">
+		update tb_reimburse set totalCount = #{tre.totalCount},createTime = #{tre.createTime},event = #{tre.event}
+		where reimburseId = #{tre.reimburseId}
+	</update>
+
+	<!-- 编辑删除 -->
+	<delete id="deleteByCompile">
+		delete from reimburse_detail
+		where id = #{id}
+	</delete>
+
+	<!-- 提交 -->
+	<update id="updateBySubmit">
+		update tb_reimburse set statusId = #{rlist.statusId},nextDealMan = #{rlist.nextDealMan}
+		where reimburseId = #{rlist.reimburseId}
+	</update>
+
+	<!-- 查看详情信息 -->
+	<select id="queryByBasics" resultType="ReimbursementList">
+		SELECT * FROM `reimburse_detail`
+		WHERE mainId = #{mainId}
+	</select>
+
+	<!-- 查看详情基本信息 -->
+	<select id="queryByBasic" resultType="ReimbursementList">
+		SELECT reimburseId,createMan,employeeName createMans,createTime,
+		(SELECT positionName FROM employee em INNER JOIN POSITION p ON p.positionId = em.positionId WHERE em.employeeId = r.createMan) positionName,
+		(SELECT employeeName FROM employee em WHERE em.employeeId = r.nextDealMan) nextDealMans,
+		r.departmentId,d.departmentName,nextDealMan,EVENT,totalCount,r.statusId,statusname
+		FROM tb_reimburse r 
+		INNER JOIN employee emp 
+		ON r.createMan = emp.employeeId
+		INNER JOIN department d 
+		ON r.departmentId = d.departmentId
+		INNER JOIN tb_status s 
+		ON r.statusId = s.statusId
+		WHERE reimburseId = #{reimburseId}
+		ORDER BY `createTime` DESC
+	</select>
+	
+	<!-- 出纳/财务 -->
+	<select id="queryByTwo" resultType="ReimbursementList">
+		SELECT reimburseId,createMan,employeeName createMans,createTime,
+		(SELECT positionName FROM employee em INNER JOIN POSITION p ON p.positionId = em.positionId WHERE em.employeeId = r.createMan) positionName,
+		(SELECT employeeName FROM employee em WHERE em.employeeId = r.nextDealMan) nextDealMans,
+		r.departmentId,d.departmentName,nextDealMan,EVENT,totalCount,r.statusId,statusname
+		FROM tb_reimburse r 
+		INNER JOIN employee emp 
+		ON r.createMan = emp.employeeId
+		INNER JOIN department d 
+		ON r.departmentId = d.departmentId
+		INNER JOIN tb_status s 
+		ON r.statusId = s.statusId
+		ORDER BY `createTime` DESC
+	</select>
+
+	<!-- 部门经理 -->
+	<select id="queryByDepartmentManager" resultType="ReimbursementList">
+		SELECT reimburseId,createMan,employeeName createMans,createTime,
+		(SELECT positionName FROM employee em INNER JOIN POSITION p ON p.positionId = em.positionId WHERE em.employeeId = r.createMan) positionName,
+		(SELECT employeeName FROM employee em WHERE em.employeeId = r.nextDealMan) nextDealMans,
+		r.departmentId,d.departmentName,nextDealMan,EVENT,totalCount,r.statusId,statusname
+		FROM tb_reimburse r 
+		INNER JOIN employee emp 
+		ON r.createMan = emp.employeeId
+		INNER JOIN department d 
+		ON r.departmentId = d.departmentId
+		INNER JOIN tb_status s 
+		ON r.statusId = s.statusId
+		WHERE emp.`departmentId` = #{departmentId} OR  emp.`positionId` = #{positionId} OR emp.`employeeId` = #{employeeId}
+		ORDER BY `createTime` DESC
+	</select>
+
+	<!-- 查询报销列表 -->
+	<select id="queryByReimbursementList" resultType="ReimbursementList">
+		SELECT reimburseId,createMan,employeeName createMans,createTime,
+		(SELECT positionName FROM employee em INNER JOIN POSITION p ON p.positionId = em.positionId WHERE em.employeeId = r.createMan) positionName,
+		(SELECT employeeName FROM employee em WHERE em.employeeId = r.nextDealMan) nextDealMans,
+		r.departmentId,d.departmentName,nextDealMan,EVENT,totalCount,r.statusId,statusname
+		FROM tb_reimburse r 
+		INNER JOIN employee emp 
+		ON r.createMan = emp.employeeId
+		INNER JOIN department d 
+		ON r.departmentId = d.departmentId
+		INNER JOIN tb_status s 
+		ON r.statusId = s.statusId
+		WHERE  emp.`positionId` = #{positionId} AND emp.`employeeId` = #{employeeId}
+		ORDER BY `createTime` DESC
+	</select>
+  
+  <!-- 新增报销 -->
+  <insert id="insertByReimburs">
+		insert into tb_reimburse value(#{tb_reimburse.reimburseId},#{tb_reimburse.typeId},#{tb_reimburse.createMan},#{tb_reimburse.createTime},#{tb_reimburse.departmentId},#{tb_reimburse.nextDealMan},#{tb_reimburse.event},#{tb_reimburse.totalCount},#{tb_reimburse.statusId});
+		<if test="tb_reimburse.list.size() != 0">
+			insert into reimburse_detail (`id`,`mainId`,`subTotal`,`desc`,`pictureName`,`picturePath`) values
+			<foreach collection="tb_reimburse.list" item="temp" separator=",">
+				(#{temp.id},#{temp.mainId},#{temp.subTotal},#{temp.desc},#{temp.pictureName},#{temp.picturePath})
+			</foreach>
+		</if>
+	</insert>
+	
+	<!-- 查询主表最后一条Id -->
+	<select id="queryByReimburseLast" resultType="Tb_reimburse">
+		SELECT * FROM `tb_reimburse`
+		ORDER BY reimburseId DESC
+		LIMIT 0,1
+	</select>
+  
+</mapper>
